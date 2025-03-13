@@ -32,6 +32,9 @@ namespace _Assets.Scripts.Services.StateMachine.StatesCreators
         {
            _gameStateMachine.RemoveState(GameStateType.Init);
            _gameStateMachine.RemoveState(GameStateType.Game);
+           
+           _uiStateMachine.RemoveState(UIStateType.Loading);
+           _uiStateMachine.RemoveState(UIStateType.Game);
         }
     }
 }
