@@ -1,4 +1,4 @@
-Spent approx 2h hours on the game and 0.5-1h to record a video and write an email etc.
+Spent approx 2h hours on the game and 10m to record a video, fill the form etc.
 
 
 Didn't unlock fps, may feel laggy
