@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace _Assets.Scripts.Gameplay
 {
+    [RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D))]
     public class DraggableView : MonoBehaviour
     {
         [SerializeField] private new Rigidbody2D rigidbody2D;

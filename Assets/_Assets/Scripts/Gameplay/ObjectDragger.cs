@@ -5,6 +5,7 @@ namespace _Assets.Scripts.Gameplay
 {
     public class ObjectDragger : MonoBehaviour
     {
+        [SerializeField] private LayerMask shelf;
         [SerializeField] private new Camera camera;
         [Inject] private PlayerStateController _playerStateController;
         private DraggableView _lastObject;
@@ -17,33 +18,42 @@ namespace _Assets.Scripts.Gameplay
 
         private void CheckTouches()
         {
-            Debug.Log("Check touches");
-
             if (Input.touchCount > 0)
             {
                 var touch = Input.GetTouch(0);
+                var touchWorldPosition = ConvertScreenSpaceToWorldSpace(touch.position);
+
                 if (touch.phase == TouchPhase.Began)
                 {
-                    CheckObjectsUnderPosition(ConvertScreenSpaceToWorldSpace(touch.position));
+                    CheckObjectsUnderPosition(touchWorldPosition);
                 }
 
                 if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
                 {
-                    Drop();
+                    if (!TryPlace(touchWorldPosition))
+                    {
+                        Drop();
+                    }
                 }
             }
 
 #if UNITY_EDITOR
 
+            var mouseWorldPosition = ConvertScreenSpaceToWorldSpace(Input.mousePosition);
+
             if (Input.GetMouseButtonDown(0))
             {
                 Debug.Log("Mouse down");
-                CheckObjectsUnderPosition(ConvertScreenSpaceToWorldSpace(Input.mousePosition));
+                CheckObjectsUnderPosition(mouseWorldPosition);
             }
 
             if (Input.GetMouseButtonUp(0))
             {
-                Drop();
+                if (!TryPlace(mouseWorldPosition))
+                {
+                    Debug.Log("DROP");
+                    Drop();
+                }
             }
 #endif
         }
@@ -64,12 +74,32 @@ namespace _Assets.Scripts.Gameplay
                 _lastObject.DisableGravity();
                 _playerStateController.SetState(PlayerStateController.PlayerState.Dragging);
             }
-            else if (hit.transform.parent.TryGetComponent(out DraggableView draggableViewParent))
+            else if (hit.transform.TryGetComponent(out ObjectShelfView objectShelfView))
             {
-                _lastObject = draggableViewParent;
-                _lastObject.DisableGravity();
+                _lastObject = objectShelfView.Take();
                 _playerStateController.SetState(PlayerStateController.PlayerState.Dragging);
             }
+        }
+
+        private bool TryPlace(Vector3 screenPosition)
+        {
+            // Could've used RaycastAll and looped through all objects instead
+            var hit = Physics2D.Raycast(screenPosition, Vector2.zero, Mathf.Infinity, shelf);
+
+            if (hit.collider == null)
+            {
+                Debug.LogWarning($"[Object Dragger] No object under position: {screenPosition}");
+                return false;
+            }
+
+            if (hit.transform.TryGetComponent(out ObjectShelfView objectShelfView))
+            {
+                objectShelfView.Place(_lastObject);
+                _lastObject = null;
+                _playerStateController.SetState(PlayerStateController.PlayerState.Moving);
+            }
+
+            return true;
         }
 
         private void Drag()
@@ -100,7 +130,6 @@ namespace _Assets.Scripts.Gameplay
                 _playerStateController.SetState(PlayerStateController.PlayerState.Moving);
             }
         }
-
 
         private Vector3 ConvertScreenSpaceToWorldSpace(Vector2 screenPosition) =>
             camera.ScreenToWorldPoint(screenPosition);
