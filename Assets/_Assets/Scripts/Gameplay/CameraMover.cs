@@ -1,4 +1,5 @@
 using UnityEngine;
+using VContainer;
 
 namespace _Assets.Scripts.Gameplay
 {
@@ -7,6 +8,7 @@ namespace _Assets.Scripts.Gameplay
         [SerializeField] private Vector2 boundaries;
         [SerializeField] private new Camera camera;
         [SerializeField] private Transform cameraStartTransform;
+        [Inject] private PlayerStateController _playerStateController;
         private Vector2 _lastPosition;
         private Vector2 _touchStartPosition, _touchCurrentPosition;
 
@@ -30,10 +32,13 @@ namespace _Assets.Scripts.Gameplay
 
         private void Update()
         {
-            DetectTouches();
-            CalculateNewCameraPosition();
-            _lastPosition = CheckBoundaries(_lastPosition);
-            SetCameraPosition(_lastPosition);
+            if (_playerStateController.CurrentState == PlayerStateController.PlayerState.Moving)
+            {
+                DetectTouches();
+                CalculateNewCameraPosition();
+                _lastPosition = CheckBoundaries(_lastPosition);
+                SetCameraPosition(_lastPosition);
+            }
         }
 
         private void LateUpdate()
